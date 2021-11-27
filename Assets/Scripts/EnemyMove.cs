@@ -6,6 +6,7 @@ public class EnemyMove : MonoBehaviour
 {
     Rigidbody2D rigid;
     public int nextMove;
+    public int hp;
     Animator anim;
     SpriteRenderer spriteRenderer;
     CircleCollider2D circlecollider;
@@ -66,11 +67,16 @@ public class EnemyMove : MonoBehaviour
 
     public void OnDamaged()
     {
-        spriteRenderer.color = new Color(1, 1, 1, 0.4f);
-        spriteRenderer.flipY = true;
-        circlecollider.enabled = false;
-        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
-        Invoke("DeActive", 5);
+        hp -= 1;
+
+        if(hp == 0)
+        {
+            spriteRenderer.color = new Color(1, 1, 1, 0.4f);
+            spriteRenderer.flipY = true;
+            circlecollider.enabled = false;
+            rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
+            Invoke("DeActive", 5);
+        }
     }
 
     void DeActive()

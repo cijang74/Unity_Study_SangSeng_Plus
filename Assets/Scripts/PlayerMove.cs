@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class PlayerMove : MonoBehaviour
 {
@@ -12,6 +13,14 @@ public class PlayerMove : MonoBehaviour
     Animator anim;
     BoxCollider2D col2D;
 
+    public AudioClip audioJump;
+    public AudioClip audioAttack;
+    public AudioClip audioDamaged;
+    public AudioClip audioDie;
+    public AudioClip audioFinish;
+
+    AudioSource audioSource;
+
 
     private void Awake()
     {
@@ -20,6 +29,29 @@ public class PlayerMove : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
         col2D = GetComponent<BoxCollider2D>();
+        audioSource = GetComponent<AudioSource>();
+    }
+
+    void PlaySound(string action)
+    {
+        switch (action){
+            case "JUMP":
+                audioSource.clip = audioJump;
+                break;
+            case "ATTACK":
+                audioSource.clip = audioAttack;
+                break;
+            case "DAMAGED":
+                audioSource.clip = audioDamaged;
+                break;
+            case "DIE":
+                audioSource.clip = audioDie;
+                break;
+            case "FINISH":
+                audioSource.clip = audioFinish;
+                break;
+        }
+        audioSource.Play();
     }
 
     private void Update() // 단발적인 키입력은 그냥 업데이트
@@ -29,6 +61,7 @@ public class PlayerMove : MonoBehaviour
         {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse); // 무게 적용하려면 Impulse
             anim.SetBool("IsJumping", true);
+            PlaySound("JUMP");
         }
 
 
@@ -111,11 +144,13 @@ public class PlayerMove : MonoBehaviour
         if(collision.gameObject.tag == "Finish")
         {
             gameManager.NextStage();
+            PlaySound("FINISH");
         }
     }
 
     void OnDamaged(Vector2 targetPos)
     {
+        PlaySound("DAMAGED");
         gameManager.HealthDown();
 
         gameObject.layer = 11;
@@ -139,6 +174,7 @@ public class PlayerMove : MonoBehaviour
 
     public void OnDie()
     {
+        PlaySound("DIE");
         spriteRenderer.color = new Color(1, 1, 1, 0.4f);
         spriteRenderer.flipY = true;
         col2D.enabled = false;
@@ -147,8 +183,21 @@ public class PlayerMove : MonoBehaviour
 
     void OnAttack(Transform enemy)
     {
-        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
-        EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
-        enemyMove.OnDamaged();
+        PlaySound("ATTACK");
+        rigid.AddForce(Vector2.up * 8, ForceMode2D.Impulse);
+        try
+        {
+            EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
+            enemyMove.OnDamaged();
+        }catch(NullReferenceException)
+        {
+            BossMove enemyMove = enemy.GetComponent<BossMove>();
+            enemyMove.OnDamaged();
+        }
+    }
+
+    public void VelocityZero()
+    {
+        rigid.velocity = Vector2.zero;
     }
 }
